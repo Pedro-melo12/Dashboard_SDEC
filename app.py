@@ -22,6 +22,7 @@ from datetime import datetime
 from dash import Dash, Input, Output, dcc, html
 
 import tabs
+from tabs import home as tab_home
 from components import data, ui
 from config import META
 
@@ -47,7 +48,12 @@ server = app.server
 # Para adicionar uma aba nova, basta criar o arquivo - este código não muda.
 
 EIXOS = tabs.listar_eixos()
-ABAS = tabs.descobrir_abas()
+ABAS_TODAS = tabs.descobrir_abas()
+
+# ABAS sem a Home - usado para navegação real do dashboard.
+# A Home é uma aba especial: tem layout estático no DOM e nunca aparece
+# na lista de abas "reais".
+ABAS = [a for a in ABAS_TODAS if a['eixo'] != '__home__']
 
 
 # ============================================================================
@@ -127,11 +133,15 @@ def construir_layout():
             atualizado_em=atualizado_em,
         ),
 
-        # Navegação - dois níveis
-        html.Div(id='nav-container', children=[
-            construir_nav_eixos(eixo_inicial),
-            construir_nav_subs(eixo_inicial, ''),
-        ]),
+        # Navegação - dois níveis (oculta na Home)
+        html.Div(
+            id='nav-container',
+            style={'display': 'none'},  # oculto inicial (estamos na Home)
+            children=[
+                construir_nav_eixos(eixo_inicial),
+                construir_nav_subs(eixo_inicial, ''),
+            ]
+        ),
 
         # Store guarda qual aba está ativa
         dcc.Store(id='aba-ativa', data=aba_inicial_id),
@@ -139,8 +149,18 @@ def construir_layout():
         # Location (URL) para compatibilidade
         dcc.Location(id='url', refresh=False),
 
-        # Container do conteúdo da aba
-        html.Div(id='conteudo-aba'),
+        # HOME estática no layout — sempre presente no DOM
+        # Visibilidade controlada por display
+        html.Div(
+            id='home-container',
+            children=tab_home.layout(),
+        ),
+
+        # Container do conteúdo das outras abas (oculto na Home)
+        html.Div(
+            id='conteudo-aba',
+            style={'display': 'none'},
+        ),
     ])
 
 
@@ -156,60 +176,85 @@ app.layout = construir_layout
 # - Carga inicial (renderiza a primeira aba)
 
 from dash import ALL, ctx
-from tabs import home as tab_home
 
 
 @app.callback(
     Output('aba-ativa', 'data'),
     Output('nav-container', 'children'),
+    Output('nav-container', 'style'),
+    Output('home-container', 'style'),
     Output('conteudo-aba', 'children'),
+    Output('conteudo-aba', 'style'),
     Input({'type': 'nav-sub', 'index': ALL}, 'n_clicks'),
     Input({'type': 'nav-eixo', 'index': ALL}, 'n_clicks'),
-    Input('url', 'pathname'),
-    Input('aba-ativa', 'data'),
+    Input('btn-entrar', 'n_clicks'),
+    prevent_initial_call=True,
 )
-def navegar(_clicks_subs, _clicks_eixos, pathname, aba_id_atual):
+def navegar(_clicks_subs, _clicks_eixos, _click_entrar):
+    """
+    Gerencia transições entre Home e abas.
+
+    Estado inicial (definido no layout):
+    - home-container: display=block (visível)
+    - nav-container: display=none (oculto)
+    - conteudo-aba: display=none (oculto, vazio)
+
+    Transições:
+    - btn-entrar → mostra primeira aba (Mercado de Trabalho)
+    - nav-eixo __home__ → volta pra Home
+    - outros nav-eixo → mostra primeira sub-aba desse eixo
+    - nav-sub X → mostra sub-aba X
+    """
+    from dash import no_update
     triggered = ctx.triggered_id
 
-    # URL /entrar — botão "Acessar" da capa Home (via href)
-    if triggered == 'url' and pathname == '/entrar':
-        aba_id = ABAS[0]['id']
-    elif isinstance(triggered, dict):
-        if triggered.get('type') == 'nav-sub':
-            aba_id = triggered['index']
-        elif triggered.get('type') == 'nav-eixo':
+    STYLE_VISIVEL = {'display': 'block'}
+    STYLE_OCULTO = {'display': 'none'}
+
+    # Botão "Acessar o Observatório" da Home
+    if triggered == 'btn-entrar':
+        aba = ABAS[0]
+        nav = [construir_nav_eixos(aba['eixo']),
+               construir_nav_subs(aba['eixo'], aba['sub'])]
+        return (aba['id'], nav,
+                STYLE_VISIVEL,  # nav visível
+                STYLE_OCULTO,   # home oculta
+                aba['module'].layout(),
+                STYLE_VISIVEL)  # conteudo visível
+
+    if isinstance(triggered, dict):
+        if triggered.get('type') == 'nav-eixo':
             eixo_clicado = triggered['index']
             if eixo_clicado == '__home__':
-                aba_id = '__home__'
-            else:
-                primeiras = [a for a in ABAS if a['eixo'] == eixo_clicado]
-                aba_id = primeiras[0]['id'] if primeiras else aba_id_atual
+                # Voltar para Home — sem re-renderizar nada
+                return (no_update, no_update,
+                        STYLE_OCULTO,  # nav oculto
+                        STYLE_VISIVEL, # home visível
+                        no_update,
+                        STYLE_OCULTO)  # conteudo oculto
+            primeiras = [a for a in ABAS if a['eixo'] == eixo_clicado]
+            if not primeiras:
+                return [no_update] * 6
+            aba_id = primeiras[0]['id']
+        elif triggered.get('type') == 'nav-sub':
+            aba_id = triggered['index']
         else:
-            aba_id = aba_id_atual
+            return [no_update] * 6
     else:
-        aba_id = aba_id_atual
+        return [no_update] * 6
 
-    # Renderizar Home
-    if aba_id == '__home__':
-        nav = [
-            construir_nav_eixos('__home__'),
-            construir_nav_subs('__home__', ''),
-        ]
-        return '__home__', nav, tab_home.layout()
-
-    # Renderizar aba normal
     aba = tabs.aba_por_id(aba_id)
     if aba is None:
-        aba = ABAS[0]
-        aba_id = aba['id']
+        return [no_update] * 6
 
-    nav = [
-        construir_nav_eixos(aba['eixo']),
-        construir_nav_subs(aba['eixo'], aba['sub']),
-    ]
-    conteudo = aba['module'].layout()
+    nav = [construir_nav_eixos(aba['eixo']),
+           construir_nav_subs(aba['eixo'], aba['sub'])]
 
-    return aba_id, nav, conteudo
+    return (aba['id'], nav,
+            STYLE_VISIVEL,
+            STYLE_OCULTO,
+            aba['module'].layout(),
+            STYLE_VISIVEL)
 
 
 # ============================================================================
@@ -242,11 +287,12 @@ if __name__ == '__main__':
     for aba in ABAS:
         print(f"    · {aba['eixo']} > {aba['sub']}")
     print()
-    print("  Servidor: http://0.0.0.0:8050")
+    print("  Servidor: http://127.0.0.1:8050")
     print(f"  Debug: {'ON' if debug else 'OFF'}"
           f"{' (DASH_DEBUG=1 para ativar)' if not debug else ''}")
     print("  (Ctrl+C para parar)")
     print("=" * 60)
     print()
 
+    #app.run(debug=debug, host='127.0.0.1', port=8050)
     app.run(debug=debug, host='0.0.0.0', port=int(os.environ.get("PORT", 8050)))

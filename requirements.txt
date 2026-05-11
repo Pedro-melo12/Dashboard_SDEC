@@ -1,7 +1,13 @@
-dash==2.18.2
-plotly==5.24.1
-pandas==2.2.3
-numpy==1.26.4
-openpyxl==3.1.5
-pyarrow==17.0.0
-gunicorn==22.0.0
+# Dependências do Observatório Econômico de Pernambuco
+
+# Core
+dash>=2.17,<3.0
+plotly>=5.20
+
+# Dados
+pandas>=2.2
+openpyxl>=3.1      # leitura de xlsx
+pyarrow>=15.0      # parquet (mais rápido que fastparquet)
+
+# Produção (opcional, para deploy)
+gunicorn>=22.0     # servidor WSGI para deploy

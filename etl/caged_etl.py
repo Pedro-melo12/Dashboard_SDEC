@@ -1,3 +1,20 @@
+"""
+etl/caged_etl.py
+================
+Lê o arquivo CAGED_PE.xlsx (duas abas) e produz dois parquets limpos:
+
+    caged_municipal.parquet  -> aba Plan1 (saldo por município, mensal)
+    caged_genero.parquet     -> aba Caged MF (saldo por sexo, estadual)
+
+Por que dois arquivos? Granularidades diferentes (município vs estado).
+Misturar isso em um arquivo só traria muitos NaN e atrapalharia.
+
+Como rodar:
+    python -m etl.caged_etl
+
+(O `-m` faz o Python tratar o arquivo como módulo, o que permite os
+imports relativos como `from config import ...` funcionarem.)
+"""
 
 import pandas as pd
 import sys

@@ -1,3 +1,13 @@
+"""
+components/charts.py
+====================
+Helpers para criação de gráficos Plotly com a identidade visual do
+observatório aplicada de forma consistente.
+
+A regra: nenhuma aba constrói gráficos do zero. Todas usam essas
+funções, que aplicam paleta, fontes, espaçamentos e formatação
+brasileira automaticamente.
+"""
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -18,7 +28,7 @@ def aplicar_layout_default(fig: go.Figure, **overrides) -> go.Figure:
 
 
 # ============================================================================
-# Linha temporal
+# Linha temporal - usado para séries históricas
 # ============================================================================
 
 def linha_temporal(df: pd.DataFrame, x: str, y: str,
@@ -85,7 +95,7 @@ def linha_temporal(df: pd.DataFrame, x: str, y: str,
 
 
 # ============================================================================
-# Linha múltipla 
+# Linha múltipla - várias séries no mesmo gráfico
 # ============================================================================
 
 def linha_multipla(df: pd.DataFrame, x: str, y: str, grupo: str,
@@ -264,7 +274,28 @@ def mapa_municipios_pe(df: pd.DataFrame, geojson: dict,
                        zmax: float = None,
                        discreto: bool = False,
                        legenda_visivel: bool = True) -> go.Figure:
-    
+    """
+    Mapa coroplético genérico dos municípios de PE.
+
+    Diferente de mapa_pe(), aceita customdata para hover rico com vários
+    campos (nome do prefeito, partido, PIB da RD, % participação, etc).
+
+    Parâmetros
+    ----------
+    df : DataFrame com cod_ibge_6 + valor + colunas de customdata.
+    geojson : malha territorial.
+    valor_col : nome da coluna numérica que define a cor.
+    hovertemplate : string Plotly (use %{customdata[0]}, [1]... e %{z}).
+    customdata_cols : lista de colunas a passar como customdata. Os
+        índices em hovertemplate seguem essa ordem.
+    cor_escala : escala personalizada (lista de [posição, cor]). Se None,
+        usa as escalas padrão do projeto.
+    divergente : se True, escala divergente centrada em 0.
+    discreto : se True, trata `valor_col` como categoria (ex: nome de RD)
+        e usa cores qualitativas distintas.
+    legenda_visivel : se False, esconde a colorbar (útil em modo discreto
+        que tem legenda própria via go.Scatter mocks).
+    """
     df = df.copy()
     df[cod_col] = df[cod_col].astype(str)
 
@@ -389,7 +420,18 @@ def mapa_pe(df: pd.DataFrame, geojson: dict,
             divergente: bool = False,
             altura: int = 480,
             unidade: str = '') -> go.Figure:
+    """
+    Mapa coroplético dos municípios de PE colorido por uma métrica.
 
+    Usa go.Choroplethmapbox com mapbox_style="white-bg" porque:
+    - É 100% offline (não depende de CDN externo)
+    - Não exige token Mapbox (white-bg é o próprio Plotly desenhando)
+    - Renderiza melhor que go.Choropleth, que tem bug conhecido tentando
+      baixar 'world_110m.json' do CDN do Plotly e falhando por CORS.
+
+    Importante: o Plotly faz o match `locations` <-> `featureidkey` como
+    STRINGS. Convertemos os dois lados para garantir que o tipo bate.
+    """
     escala = MAPA_ESCALA_DIVERGENTE if divergente else MAPA_ESCALA_POSITIVA
 
     # Garantir match string × string em ambos os lados
@@ -458,7 +500,7 @@ def mapa_pe(df: pd.DataFrame, geojson: dict,
 
 
 # ============================================================================
-# Donut com N fatias
+# Donut com N fatias - usado em estrutura da PEA
 # ============================================================================
 
 def donut_n(labels: list, valores: list, cores: list = None,
@@ -523,7 +565,7 @@ def donut_n(labels: list, valores: list, cores: list = None,
 
 
 # ============================================================================
-# Barras horizontais com destaque - ranking regional
+# Barras horizontais com destaque - usado em ranking regional
 # ============================================================================
 
 def barras_com_destaque(df: pd.DataFrame, label_col: str, valor_col: str,
@@ -592,7 +634,9 @@ def barras_com_destaque(df: pd.DataFrame, label_col: str, valor_col: str,
     return fig
 
 
-
+# ============================================================================
+# Helper de cor com transparência
+# ============================================================================
 
 def _hex_alpha(hex_color: str, alpha: float) -> str:
     """Converte #RRGGBB para rgba(r,g,b,a)."""
@@ -602,7 +646,7 @@ def _hex_alpha(hex_color: str, alpha: float) -> str:
 
 
 # ============================================================================
-# Donut chart (gênero)
+# Donut chart - usado para composição (ex: gênero)
 # ============================================================================
 
 def donut_dois(label_a: str, valor_a: float,

@@ -1,3 +1,17 @@
+"""
+components/data.py
+==================
+Camada de acesso aos dados. Carrega os parquets uma única vez (cache em
+memória via @lru_cache) e oferece funções de consulta.
+
+Por que cache? Porque o dashboard pode chamar essas funções dezenas de
+vezes por interação do usuário (cada gráfico re-renderiza após um
+clique, por exemplo). Ler parquet do disco toda vez é desperdício.
+
+Convenção: funções que retornam DataFrames já filtrados/processados
+ficam aqui. Os arquivos das abas (tabs/) NÃO devem chamar pd.read_*
+diretamente, sempre passar por aqui.
+"""
 
 import json
 from functools import lru_cache
@@ -17,6 +31,13 @@ try:
 except ImportError:
     PIB_MUNICIPAL = None
 
+
+# ============================================================================
+# Carregamento bruto (com cache)
+# ============================================================================
+# @lru_cache(maxsize=None) faz o Python "lembrar" o resultado da função.
+# Da segunda chamada em diante, ele devolve direto da memória sem reler
+# o arquivo. Ideal para datasets que não mudam durante a execução do app.
 
 @lru_cache(maxsize=None)
 def caged_municipal() -> pd.DataFrame:
@@ -130,7 +151,13 @@ def pnad_ultimo_valor(chave: str) -> dict:
 # ============================================================================
 
 def caged_saldo_acumulado_12m(data_referencia: pd.Timestamp = None) -> pd.DataFrame:
-  
+    """
+    Calcula o saldo acumulado de 12 meses por município, terminando em
+    `data_referencia` (default: última disponível).
+
+    Retorna DataFrame com cod_ibge_6, municipio, saldo_12m, admissoes_12m,
+    desligamentos_12m.
+    """
     df = caged_municipal()
     if data_referencia is None:
         data_referencia = df['data'].max()
@@ -147,7 +174,10 @@ def caged_saldo_acumulado_12m(data_referencia: pd.Timestamp = None) -> pd.DataFr
 
 
 def caged_total_estadual_mes(data_referencia: pd.Timestamp = None) -> dict:
-
+    """
+    Totais do estado no mês de referência (default: último mês disponível).
+    Retorna dict com saldo, admissoes, desligamentos, data, mes_anterior_saldo.
+    """
     df = caged_municipal()
     if data_referencia is None:
         data_referencia = df['data'].max()
@@ -205,7 +235,11 @@ def caged_serie_municipio(cod_ibge_6: int) -> pd.DataFrame:
 # ============================================================================
 
 def caged_genero_mes_referencia() -> dict:
-   
+    """
+    Retorna saldo masculino e feminino do último mês disponível.
+
+    Saída: {'data': Timestamp, 'masculino': int, 'feminino': int, 'total': int}
+    """
     df = caged_genero()
     ultima = df['data'].max()
     mes = df[df['data'] == ultima]
@@ -220,7 +254,14 @@ def caged_genero_mes_referencia() -> dict:
 
 
 def caged_genero_acumulado_ano(ano: int = None) -> dict:
-   
+    """
+    Retorna saldo acumulado masculino e feminino para um ano completo
+    (ou parcial, se for o ano corrente).
+
+    Parâmetros
+    ----------
+    ano : se None, usa o ano da última data disponível.
+    """
     df = caged_genero()
     if ano is None:
         ano = df['data'].max().year
@@ -241,7 +282,15 @@ def caged_genero_acumulado_ano(ano: int = None) -> dict:
 # ============================================================================
 
 def caged_municipal_filtrado(anos: list = None, meses: list = None) -> pd.DataFrame:
-    
+    """
+    Retorna saldo agregado por município, filtrando por listas de anos
+    e/ou meses. Listas vazias ou None significam "sem filtro".
+
+    Parâmetros
+    ----------
+    anos : list[int] como [2024, 2025], ou None / []
+    meses : list[int] como [1, 2, 3], ou None / []
+    """
     df = caged_municipal()
     if anos:
         df = df[df['ano'].isin(anos)]
@@ -261,7 +310,10 @@ def caged_municipal_filtrado(anos: list = None, meses: list = None) -> pd.DataFr
 # ============================================================================
 
 def caged_setor_acumulado_12m(data_referencia: pd.Timestamp = None) -> pd.DataFrame:
-  
+    """
+    Saldo acumulado de 12 meses por setor, terminando em data_referencia.
+    Retorna DataFrame com setor, saldo_12m, admissoes_12m, desligamentos_12m.
+    """
     df = caged_setor()
     if data_referencia is None:
         data_referencia = df['data'].max()
@@ -278,7 +330,10 @@ def caged_setor_acumulado_12m(data_referencia: pd.Timestamp = None) -> pd.DataFr
 
 
 def caged_setor_filtrado(anos: list = None, meses: list = None) -> pd.DataFrame:
-    
+    """
+    Retorna saldo agregado por setor, filtrando por anos e/ou meses.
+    Listas vazias ou None = sem filtro nessa dimensão.
+    """
     df = caged_setor()
     if anos:
         df = df[df['ano'].isin(anos)]
@@ -294,7 +349,14 @@ def caged_setor_filtrado(anos: list = None, meses: list = None) -> pd.DataFrame:
 
 
 def caged_setor_serie_temporal(janela_meses: int = 3) -> pd.DataFrame:
-   
+    """
+    Série temporal por setor com média móvel para suavizar ruído mensal.
+
+    Parâmetros
+    ----------
+    janela_meses : tamanho da janela da média móvel. 3 é um bom default
+    para mostrar a tendência sem perder muito detalhe temporal.
+    """
     df = caged_setor().sort_values(['setor', 'data']).copy()
     df['saldo_mm'] = (df.groupby('setor')['saldo']
                        .transform(lambda s: s.rolling(janela_meses, min_periods=1).mean()))
@@ -314,7 +376,14 @@ REGIOES_NE_ESTADOS = [
 
 
 def pnad_reg_indicador(chave: str, regiao: str = None) -> pd.DataFrame:
-   
+    """
+    Filtra a PNAD regional por indicador (e opcionalmente por região).
+
+    Parâmetros
+    ----------
+    chave : ex 'taxa_desemprego', 'desocupados', 'desalentados'
+    regiao : ex 'Pernambuco', 'Nordeste'. Se None, retorna todas.
+    """
     df = pnad_regional()
     df = df[df['indicador'] == chave]
     if regiao:
@@ -323,7 +392,13 @@ def pnad_reg_indicador(chave: str, regiao: str = None) -> pd.DataFrame:
 
 
 def pnad_reg_ultimo_valor(chave: str, regiao: str = 'Pernambuco') -> dict:
-    
+    """
+    Pega o último valor de um indicador para uma região + variação vs
+    trimestre anterior.
+
+    Saída: dict com valor, valor_anterior, variacao_pp, variacao_abs,
+    trimestre, unidade, nome.
+    """
     df = pnad_reg_indicador(chave, regiao)
     if df.empty:
         return {'valor': None, 'valor_anterior': None, 'variacao_pp': None,
@@ -352,7 +427,21 @@ def pnad_reg_ultimo_valor(chave: str, regiao: str = 'Pernambuco') -> dict:
 
 def pnad_reg_estrutura_pea(regiao: str = 'Pernambuco',
                             trimestre_label: str = None) -> dict:
-   
+    """
+    Retorna a estrutura da população em idade de trabalhar (PIA) para
+    uma região e trimestre. Composição:
+        ocupados + desocupados = força de trabalho
+        + desalentados + (fora_forca - desalentados) = fora da força
+
+    A coluna 'fora_forca' já INCLUI os desalentados na PNAD, então
+    para evitar dupla contagem no donut, calculamos
+    fora_nao_desalentados = fora_forca - desalentados.
+
+    Parâmetros
+    ----------
+    regiao : ex 'Pernambuco', 'Nordeste'
+    trimestre_label : 'YYYY-Tn'. Se None, último disponível.
+    """
     df = pnad_regional()
     df_reg = df[df['regiao'] == regiao]
 
@@ -385,7 +474,13 @@ def pnad_reg_estrutura_pea(regiao: str = 'Pernambuco',
 
 def pnad_reg_ranking_estados(chave: str = 'taxa_desemprego',
                               trimestre_label: str = None) -> pd.DataFrame:
-    
+    """
+    Retorna ranking dos 9 estados do NE para um indicador num trimestre.
+    Não inclui o agregado Nordeste por default.
+
+    Para indicadores onde "menor é melhor" (taxa de desemprego, pobreza),
+    o consumidor pode ordenar ascendente para ver os melhores em cima.
+    """
     df = pnad_regional()
     df = df[(df['indicador'] == chave) & (df['regiao'].isin(REGIOES_NE_ESTADOS))]
 
@@ -399,7 +494,10 @@ def pnad_reg_ranking_estados(chave: str = 'taxa_desemprego',
 
 
 def pnad_reg_tabela_estados(trimestre_label: str = None) -> pd.DataFrame:
-    
+    """
+    Retorna uma tabela wide com todos os 9 estados do NE no trimestre
+    indicado, com colunas para cada indicador. Útil para data tables.
+    """
     df = pnad_regional()
     df = df[df['regiao'].isin(REGIOES_NE_ESTADOS)]
 
@@ -423,7 +521,10 @@ def pnad_reg_tabela_estados(trimestre_label: str = None) -> pd.DataFrame:
 
 
 def pnad_reg_trimestres_disponiveis(regiao: str = 'Pernambuco') -> list:
-    
+    """
+    Lista de trimestres disponíveis para uma região, mais recente primeiro.
+    Retorna lista de strings 'YYYY-Tn'.
+    """
     df = pnad_regional()
     df = df[df['regiao'] == regiao]
     trimestres = df[['data', 'trimestre_label']].drop_duplicates()
@@ -436,14 +537,22 @@ def pnad_reg_trimestres_disponiveis(regiao: str = 'Pernambuco') -> list:
 # ============================================================================
 
 def pobreza_serie(regiao: str = 'Pernambuco') -> pd.DataFrame:
-    
+    """
+    Série temporal de pobreza e extrema pobreza para uma região.
+
+    Retorna DataFrame com colunas: data, trimestre_label, indicador
+    (pobreza ou extrema_pobreza), indicador_nome, valor (em pessoas).
+    """
     df = pobreza_regional()
     df = df[df['regiao'] == regiao]
     return df.sort_values(['data', 'indicador']).reset_index(drop=True)
 
 
 def pobreza_ultimo_trimestre(regiao: str = 'Pernambuco') -> dict:
-    
+    """
+    Retorna os valores mais recentes de pobreza e extrema pobreza para
+    uma região, mais o trimestre.
+    """
     df = pobreza_serie(regiao)
     if df.empty:
         return {}
@@ -460,7 +569,19 @@ def pobreza_ultimo_trimestre(regiao: str = 'Pernambuco') -> dict:
 # ============================================================================
 
 def informalidade_serie(regiao: str = 'Pernambuco') -> pd.DataFrame:
-   
+    """
+    Série temporal da informalidade.
+
+    A base original (PNAD) traz o número ABSOLUTO de pessoas em ocupação
+    informal (não a taxa percentual, apesar do nome dizer "%" no
+    metadado). Aqui calculamos a taxa real cruzando com ocupados:
+
+        taxa_informalidade = informais / ocupados × 100
+
+    Retorna DataFrame com colunas:
+        data, trimestre, informais (pessoas), ocupados (pessoas),
+        taxa (% sobre ocupados)
+    """
     inf = pnad()
     inf = inf[inf['indicador'] == 'informalidade'][
         ['data', 'trimestre', 'valor']
@@ -516,7 +637,10 @@ def informalidade_ultimo(regiao: str = 'Pernambuco') -> dict:
 
 @lru_cache(maxsize=None)
 def municipios_rd() -> pd.DataFrame:
-    
+    """
+    Mapeamento município → RD.
+    Colunas: cod_ibge_6, municipio, regiao_desenvolvimento.
+    """
     return pd.read_parquet(MUNICIPIOS_RD)
 
 
@@ -548,26 +672,45 @@ def municipios_da_rd(rd: str) -> pd.DataFrame:
 
 @lru_cache(maxsize=None)
 def prefeitos() -> pd.DataFrame:
-    
+    """
+    1 linha por município (com prefeito eleito).
+
+    Fernando de Noronha não tem prefeito municipal — é distrito estadual
+    administrado por administrador indicado pelo Governador. A base tem
+    184 linhas (185 - Fernando de Noronha).
+    """
     return pd.read_parquet(PREFEITOS)
 
 
 @lru_cache(maxsize=None)
 def vereadores() -> pd.DataFrame:
-    
+    """
+    1 linha por vereador eleito. ~2149 vereadores em PE.
+
+    Colunas: cod_ibge_6, municipio, vereador_nome, partido, genero
+    """
     return pd.read_parquet(VEREADORES)
 
 
 @lru_cache(maxsize=None)
 def n_vereadores_por_municipio() -> pd.DataFrame:
-    
+    """
+    Contagem de vereadores eleitos por município.
+    Colunas: cod_ibge_6, municipio, n_vereadores
+    """
     df = vereadores()
     return (df.groupby(['cod_ibge_6', 'municipio'])
               .size().reset_index(name='n_vereadores'))
 
 
 def gestao_publica_consolidada() -> pd.DataFrame:
-    
+    """
+    View consolidada para o mapa de Gestão Pública.
+
+    Junta município + RD + prefeito + partido + gênero do prefeito +
+    nº vereadores. 1 linha por município. Fernando de Noronha aparece
+    sem prefeito (campos preenchidos como None / 0).
+    """
     rd = municipios_rd()
     pref = prefeitos()
     nver = n_vereadores_por_municipio()
@@ -636,19 +779,35 @@ def ranking_partidos_vereadores() -> pd.DataFrame:
 
 @lru_cache(maxsize=None)
 def municipios_rd() -> pd.DataFrame:
-   
+    """
+    Mapeamento de municípios para Regiões de Desenvolvimento (RD).
+    Colunas: cod_ibge_6, municipio, regiao_desenvolvimento.
+
+    PE tem 12 RDs administrativas (Metropolitana, Mata Norte, Mata Sul,
+    Agreste Central, Agreste Setentrional, Agreste Meridional, Pajeú,
+    Sertão Central, do Araripe, do São Francisco, Itaparica, Moxotó).
+    """
     return pd.read_parquet(MUNICIPIOS_RD)
 
 
 @lru_cache(maxsize=None)
 def prefeitos() -> pd.DataFrame:
-    
+    """
+    Prefeitos eleitos por município (1 por linha).
+    Colunas: cod_ibge_6, municipio, prefeito_nome, prefeito_partido,
+             prefeito_genero.
+
+    Fernando de Noronha não aparece (não tem prefeito).
+    """
     return pd.read_parquet(PREFEITOS)
 
 
 @lru_cache(maxsize=None)
 def vereadores() -> pd.DataFrame:
-    
+    """
+    Vereadores eleitos por município (várias linhas por município).
+    Colunas: cod_ibge_6, municipio, vereador_nome, partido, genero.
+    """
     return pd.read_parquet(VEREADORES)
 
 
@@ -684,7 +843,10 @@ def lista_rds() -> list:
 # ============================================================================
 
 def n_vereadores_por_municipio() -> pd.DataFrame:
-    
+    """
+    Contagem de vereadores por município.
+    Retorna: cod_ibge_6, municipio, n_vereadores.
+    """
     df = vereadores()
     agg = df.groupby(['cod_ibge_6', 'municipio'], as_index=False).size()
     agg = agg.rename(columns={'size': 'n_vereadores'})
@@ -727,7 +889,13 @@ def distribuicao_genero_prefeitos() -> dict:
 
 @lru_cache(maxsize=None)
 def gestao_publica_municipal() -> pd.DataFrame:
-    
+    """
+    Tabela consolidada de gestão pública por município:
+        cod_ibge_6, municipio, prefeito_nome, prefeito_partido,
+        prefeito_genero, n_vereadores, regiao_desenvolvimento
+
+    Útil para popular mapa, hover, tabela e cards.
+    """
     pref = prefeitos()
     n_ver = n_vereadores_por_municipio()
     rd = municipios_rd()
@@ -756,7 +924,20 @@ def gestao_publica_municipal() -> pd.DataFrame:
 
 @lru_cache(maxsize=None)
 def pib_municipal() -> pd.DataFrame:
-    
+    """
+    PIB dos municípios de Pernambuco em formato long.
+
+    Colunas: cod_ibge_6, municipio, ano, pib, vab_total, impostos,
+             pib_per_capita, regiao_desenvolvimento
+
+    Cobertura:
+    - 2010-2021: dados completos (PIB, VAB, Impostos, per capita)
+    - 2022-2023: apenas PIB e PIB per capita (VAB ainda não publicado
+      pelo IBGE - veja Nota Técnica 02/2024 do Sistema de Contas
+      Nacionais)
+
+    Valores em REAIS (não em milhares).
+    """
     return pd.read_parquet(PIB_MUNICIPAL)
 
 
@@ -776,7 +957,16 @@ def pib_ultimo_ano() -> int:
 
 
 def pib_municipal_ano(ano: int = None) -> pd.DataFrame:
-   
+    """
+    Retorna PIB de todos os municípios em um ano específico, com dados
+    da RD anexados e participações pré-calculadas:
+        cod_ibge_6, municipio, ano, pib, pib_per_capita,
+        regiao_desenvolvimento,
+        pib_rd       (PIB total da RD)
+        pib_estado   (PIB total do estado)
+        part_na_rd   (% do município no PIB da RD)
+        part_no_estado (% do município no PIB do estado)
+    """
     if ano is None:
         ano = pib_ultimo_ano()
 
@@ -799,7 +989,10 @@ def pib_municipal_ano(ano: int = None) -> pd.DataFrame:
 
 
 def pib_estadual_serie() -> pd.DataFrame:
-    
+    """
+    Série temporal do PIB do estado (soma de todos os municípios).
+    Retorna: ano, pib, vab_total, impostos
+    """
     df = pib_municipal()
     return (df.groupby('ano', as_index=False)
             .agg(pib=('pib', 'sum'),
@@ -810,7 +1003,10 @@ def pib_estadual_serie() -> pd.DataFrame:
 
 
 def pib_ranking_rds(ano: int = None) -> pd.DataFrame:
-    
+    """
+    Ranking das 12 RDs por PIB total em um ano.
+    Colunas: regiao_desenvolvimento, pib, n_municipios, part_no_estado
+    """
     if ano is None:
         ano = pib_ultimo_ano()
     df = pib_municipal()
@@ -890,7 +1086,19 @@ VAB_SETORIAL = PIB_MUNICIPAL.parent / "pib_vab_setorial.parquet" if PIB_MUNICIPA
 
 @lru_cache(maxsize=None)
 def vab_setorial() -> pd.DataFrame:
-   
+    """
+    Participação de cada município no VAB setorial DA SUA RD.
+
+    Colunas: cod_ibge_6, municipio, ano, setor, participacao_na_rd,
+             regiao_desenvolvimento
+
+    Setores: agropecuaria, industria, servicos, apu
+
+    A participacao_na_rd é uma fração [0, 1]. Para cada (RD, ano, setor),
+    a soma das participações dos municípios da RD = 1.0.
+
+    Cobertura: 2010-2021 (Tabela 4 do XLS - SEPLAG-PE).
+    """
     return pd.read_parquet(VAB_SETORIAL)
 
 
@@ -900,7 +1108,16 @@ def vab_setorial_anos_disponiveis() -> list:
 
 
 def vab_setorial_por_rd(rd_nome: str, ano: int = None) -> pd.DataFrame:
-    
+    """
+    Participações dos municípios de uma RD em cada setor (em %).
+
+    Retorna DataFrame wide:
+        cod_ibge_6, municipio, agropecuaria, industria, servicos, apu
+
+    Onde cada coluna setorial é o % do VAB daquele setor da RD que o
+    município produz. Ex: "Belo Jardim, indústria 32,8%" significa que
+    Belo Jardim responde por 32,8% do VAB Industrial do Agreste Central.
+    """
     df = vab_setorial()
     if ano is None:
         ano = df['ano'].max()
@@ -923,7 +1140,18 @@ def vab_setorial_por_rd(rd_nome: str, ano: int = None) -> pd.DataFrame:
 # ============================================================================
 
 def pib_municipio_detalhe(cod_ibge_6: int, ano: int = None) -> dict:
-    
+    """
+    Retorna informações de PIB para um município específico em um ano.
+
+    Saída:
+        municipio, ano, pib, pib_per_capita,
+        pib_rd, pib_estado,
+        part_na_rd, part_no_estado,
+        rank_estadual, rank_na_rd,
+        impostos, dependencia_impostos_pct,
+        regiao_desenvolvimento,
+        n_municipios_estado (185)
+    """
     if ano is None:
         ano = pib_ultimo_ano()
 
@@ -984,29 +1212,19 @@ def pib_serie_municipio(cod_ibge_6: int) -> pd.DataFrame:
 
 def pib_crescimento_estadual_real() -> pd.DataFrame:
     """
-    Retorna o crescimento anual do PIB estadual nominal e real.
+    Taxa de crescimento NOMINAL e REAL anual do PIB estadual.
 
-    Colunas retornadas:
-    - ano
-    - pib_nominal
-    - pib_real_2023
-    - cresc_nominal_pct
-    - cresc_real_pct
+    Retorna: ano, pib_nominal, pib_real_2023,
+             cresc_nominal_pct, cresc_real_pct
     """
     df = pib_municipal()
-
-    estado = (
-        df.groupby('ano', as_index=False)
-          .agg(
-              pib_nominal=('pib', 'sum'),
-              pib_real_2023=('pib_real_2023', 'sum')
-          )
-    )
-
+    estado = (df.groupby('ano', as_index=False)
+              .agg(pib_nominal=('pib', 'sum'),
+                   pib_real_2023=('pib_real_2023', 'sum')))
     estado['cresc_nominal_pct'] = estado['pib_nominal'].pct_change() * 100
     estado['cresc_real_pct'] = estado['pib_real_2023'].pct_change() * 100
-
     return estado.sort_values('ano').reset_index(drop=True)
+
 
 # ============================================================================
 # VAB Setorial ABSOLUTO (Tabela 1 do VBA_PE)
@@ -1018,12 +1236,28 @@ VAB_ABSOLUTO = (PIB_MUNICIPAL.parent / "vab_setorial_absoluto.parquet"
 
 @lru_cache(maxsize=None)
 def vab_setorial_absoluto() -> pd.DataFrame:
-    
+    """
+    VAB ABSOLUTO por setor por município (em reais).
+
+    Colunas: cod_ibge_6, municipio, ano, setor, vab, regiao_desenvolvimento
+
+    Setores: agropecuaria, industria, servicos, apu
+
+    A soma dos 4 setores de um (município, ano) bate com vab_total do
+    parquet de PIB (diferença máxima de R$ 1 por arredondamento).
+
+    Cobertura: 2010-2021. Fonte: Tabela 1 do VBA_PE (SEPLAG-PE).
+    """
     return pd.read_parquet(VAB_ABSOLUTO)
 
 
 def vab_absoluto_por_municipio(cod_ibge_6: int, ano: int = None) -> dict:
-    
+    """
+    Composição setorial de UM município em um ano:
+        {agropecuaria: R$, industria: R$, servicos: R$, apu: R$, total: R$}
+
+    Mais a composição percentual.
+    """
     df = vab_setorial_absoluto()
     if ano is None:
         ano = df['ano'].max()
@@ -1043,7 +1277,13 @@ def vab_absoluto_por_municipio(cod_ibge_6: int, ano: int = None) -> dict:
 
 
 def vab_absoluto_por_rd(rd_nome: str, ano: int = None) -> pd.DataFrame:
-    
+    """
+    Agrega o VAB absoluto dos municípios de uma RD por setor.
+
+    Retorna DataFrame wide: setor, vab (somado dos municípios da RD).
+
+    Útil para mostrar composição setorial da RD inteira.
+    """
     df = vab_setorial_absoluto()
     if ano is None:
         ano = df['ano'].max()
@@ -1058,7 +1298,12 @@ def vab_absoluto_por_rd(rd_nome: str, ano: int = None) -> pd.DataFrame:
 
 def vab_absoluto_top_setor_rd(rd_nome: str, setor: str,
                                ano: int = None, top_n: int = None) -> pd.DataFrame:
-   
+    """
+    Para uma RD + setor + ano, retorna ranking dos municípios da RD
+    pelos valores absolutos de VAB naquele setor.
+
+    Se top_n é None, retorna todos os municípios da RD.
+    """
     df = vab_setorial_absoluto()
     if ano is None:
         ano = df['ano'].max()
@@ -1077,7 +1322,20 @@ def vab_absoluto_top_setor_rd(rd_nome: str, setor: str,
 
 def carga_tributaria_municipios(ano: int = None,
                                 rd_nome: str = None) -> pd.DataFrame:
-   
+    """
+    Ranking de municípios pela % de impostos no PIB.
+
+    Antes chamado de "dependência de impostos", mas o termo está mais
+    correto como "carga tributária sobre produtos" - é o ICMS+IPI+ISS
+    incidente sobre a produção, não transferências da União.
+
+    Parâmetros:
+        ano : se None, usa o último com dados (2021, IBGE atrasou 2022/23)
+        rd_nome : se informado, filtra apenas municípios da RD
+
+    Retorna: cod_ibge_6, municipio, regiao_desenvolvimento, pib,
+             impostos, dependencia_impostos_pct (já calculado no ETL)
+    """
     df = pib_municipal()
     sub = df[df['dependencia_impostos_pct'].notna()].copy()
 
@@ -1100,16 +1358,37 @@ def carga_tributaria_municipios(ano: int = None,
 # ============================================================================
 
 def pib_estadual_nominal_e_real_base2010() -> pd.DataFrame:
-    
+    """
+    Série temporal do PIB estadual com base = 2010.
+
+    Diferente de pib_crescimento_estadual_real() que deflaciona TUDO
+    para preços de 2023 (ano-base mais recente), aqui mostramos os dois
+    fluxos ancorados em 2010, que é mais intuitivo visualmente:
+
+    - PIB nominal: cresce rápido (acumula inflação + crescimento real)
+    - PIB real (a preços de 2010): cresce devagar (só crescimento real)
+
+    No gráfico, a área entre as duas linhas representa o efeito da
+    inflação acumulada.
+
+    Retorna: ano, pib_nominal, pib_real_base2010,
+             cresc_nominal_pct, cresc_real_pct
+    """
     df = pib_municipal()
     estado = (df.groupby('ano', as_index=False)
               .agg(pib_nominal=('pib', 'sum'),
                    pib_real_2023=('pib_real_2023', 'sum')))
 
-    
+    # PIB real a preços de 2010 = PIB real 2023 × (PIB nominal 2010 / PIB real 2023 em 2010)
+    # Que é equivalente a: PIB nominal × deflator2010
+    # deflator2010(ano) = 1 / inflação acumulada de 2010 até `ano`
+    #
+    # Forma mais direta: usar a razão entre pib_real_2023 do ano X e
+    # pib_real_2023 de 2010 para reescalar.
     pib_real_2010_base = estado.loc[estado['ano'] == 2010, 'pib_real_2023'].iloc[0]
     pib_nominal_2010 = estado.loc[estado['ano'] == 2010, 'pib_nominal'].iloc[0]
-    
+    # Em 2010, real = nominal (em preços de 2010)
+    # Para outros anos: pib_real_base2010 = pib_real_2023(ano) × (nominal2010 / real2023_em_2010)
     fator = pib_nominal_2010 / pib_real_2010_base
     estado['pib_real_base2010'] = estado['pib_real_2023'] * fator
 

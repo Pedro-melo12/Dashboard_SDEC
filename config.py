@@ -1,8 +1,29 @@
+"""
+config.py
+=========
+Configuração central do Observatório Econômico de Pernambuco.
 
+Tudo que é "decisão visual" ou "caminho" mora aqui. Isso é importante
+porque permite mudar a paleta inteira do dashboard, ou trocar a pasta
+de dados, sem mexer em nenhum outro arquivo.
+
+Organização:
+    PALETTE     -> cores da identidade visual
+    SEMANTIC    -> cores com significado (positivo, negativo, neutro)
+    PATHS       -> caminhos do sistema de arquivos
+    META        -> metadados institucionais
+    CHART       -> defaults para gráficos Plotly
+"""
 
 from pathlib import Path
 
-
+# ============================================================================
+# PALETA DE CORES - identidade visual do observatório
+# ============================================================================
+# Paleta sóbria e pastel definida pelo usuário, organizada em grupos.
+# A regra de uso: neutros são a base (use generosamente), acentos frios
+# são para o destaque principal (apenas 1 por gráfico), acentos quentes
+# para contraste/segundo destaque.
 
 PALETTE = {
     # neutros - base do design
@@ -27,7 +48,12 @@ PALETTE = {
     "bege_quente": "#B9B098",       # gradiente do mapa (faixa intermediária)
 }
 
-
+# ============================================================================
+# CORES SEMÂNTICAS - quando a cor precisa carregar significado
+# ============================================================================
+# Em vez de espalhar "verde salvia" pelo código quando queremos dizer
+# "positivo", referenciamos por significado. Se um dia trocarmos a cor
+# de positivo, mudamos só aqui.
 
 SEMANTIC = {
     "positivo": PALETTE["verde_salvia"],
@@ -38,7 +64,9 @@ SEMANTIC = {
     "anotacao": PALETTE["lilas_acinzentado"],
 }
 
-
+# Escala sequencial para o coroplético do mapa de PE.
+# Vai do mais claro (menor saldo) ao mais escuro (maior saldo).
+# Usar tons frios para valores positivos é uma convenção do observatório.
 MAPA_ESCALA_POSITIVA = [
     [0.0, PALETTE["cinza_neblina"]],
     [0.25, PALETTE["mostarda_suave"]],
@@ -47,7 +75,8 @@ MAPA_ESCALA_POSITIVA = [
     [1.0, PALETTE["azul_ardosia"]],
 ]
 
-
+# Escala divergente quando há valores positivos E negativos
+# (negativos em terracota, positivos em azul, neutro no bege neblina)
 MAPA_ESCALA_DIVERGENTE = [
     [0.0, PALETTE["terracota"]],
     [0.5, PALETTE["cinza_neblina"]],
@@ -57,7 +86,10 @@ MAPA_ESCALA_DIVERGENTE = [
 # ============================================================================
 # CAMINHOS - sistema de arquivos
 # ============================================================================
-
+# Path(__file__) é o caminho deste arquivo config.py.
+# .parent dá a pasta que contém ele (raiz do projeto).
+# Construindo a partir daqui, o projeto funciona em qualquer máquina,
+# em qualquer sistema operacional, sem caminhos absolutos hardcoded.
 
 ROOT = Path(__file__).parent
 DATA_RAW = ROOT / "data" / "raw"          # arquivos originais (xlsx)
@@ -97,9 +129,11 @@ META = {
 }
 
 # ============================================================================
-# GRÁFICOS PLOTLY
+# DEFAULTS PARA GRÁFICOS PLOTLY
 # ============================================================================
-
+# Centraliza os defaults estéticos. Cada gráfico no projeto começa com
+# uma chamada a `apply_default_layout(fig)` (ver components/charts.py),
+# que aplica essas configurações.
 
 CHART_FONT = "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
 CHART_FONT_SERIF = "Source Serif Pro, Georgia, serif"

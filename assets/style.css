@@ -1241,3 +1241,35 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; }
 }
 
 /* dcc.Link renderiza como <a>, estilos já estão no .home-btn-entrar acima */
+
+/* --- Composição setorial: donut + ranking em containers isolados --- */
+.vab-setorial-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.vab-donut-wrap {
+    flex: 0 0 38%;
+    min-width: 320px;
+    /* Donut tem altura fixa, fica colado no topo */
+    position: sticky;
+    top: 16px;
+}
+
+.vab-barras-wrap {
+    flex: 1 1 62%;
+    min-width: 0;
+}
+
+/* Em telas estreitas (< 900px), empilha verticalmente */
+@media (max-width: 900px) {
+    .vab-setorial-grid {
+        flex-direction: column;
+    }
+    .vab-donut-wrap {
+        flex: 1 1 auto;
+        position: static;
+    }
+}

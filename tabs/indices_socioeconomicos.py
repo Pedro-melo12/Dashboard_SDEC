@@ -416,37 +416,26 @@ SETOR_CORES = {
 def _construir_vab_setorial(rd_nome: str, ano: int):
     """
     Para uma RD escolhida, mostra:
-    1. Composição setorial da RD inteira em donut (4 setores, com R$ absoluto)
-    2. Ranking dos municípios da RD por VAB total
+    1. Composição setorial da RD inteira em donut (4 setores, R$ absoluto)
+    2. Ranking de TODOS os municípios da RD por VAB total
 
-    Tudo em valores absolutos (R$), não em participações relativas.
-    Dados: Tabela 1 do VBA_PE (SEPLAG).
+    SOLUÇÃO DEFINITIVA: dois dcc.Graph separados em flex container CSS.
+    Cada gráfico tem sua própria área dedicada — sem possibilidade de
+    sobreposição entre labels do donut e do ranking.
     """
     composicao = data.vab_absoluto_por_rd(rd_nome, ano)
     if composicao.empty:
         return html.Div("Sem dados para esta RD/ano.", className="aviso-dados")
 
-    # Soma total da RD
     vab_rd = float(composicao['vab'].sum())
 
-    # Plotly subplots: donut + ranking
-    from plotly.subplots import make_subplots
-
-    fig = make_subplots(
-        rows=1, cols=2,
-        specs=[[{'type': 'domain'}, {'type': 'xy'}]],
-        column_widths=[0.35, 0.65],
-        horizontal_spacing=0.08,
-    )
-
-    # --- Donut de composição setorial da RD ---
+    # =========== Donut (gráfico 1, isolado) ===========
     ordem = ['agropecuaria', 'industria', 'servicos', 'apu']
     composicao_ord = composicao.set_index('setor').reindex(ordem).reset_index()
-
     cores_ord = [SETOR_CORES[s] for s in ordem]
     labels = [SETOR_NOMES[s] for s in ordem]
 
-    fig.add_trace(go.Pie(
+    fig_donut = go.Figure(go.Pie(
         labels=labels,
         values=composicao_ord['vab'],
         hole=0.55,
@@ -457,41 +446,35 @@ def _construir_vab_setorial(rd_nome: str, ano: int):
         hovertemplate='<b>%{label}</b><br>R$ %{value:,.0f}<br>%{percent}<extra></extra>',
         sort=False,
         showlegend=False,
-    ), row=1, col=1)
-
-    # Anotação central com VAB total — domain do subplot col=1 é [0, 0.42]
-    # O centro do donut fica em x=0.21 e y=0.5 no espaço do paper
-    fig.add_annotation(
-        x=0.175, y=0.5,
-        xref='paper', yref='paper',
+    ))
+    # Texto no centro do donut
+    fig_donut.add_annotation(
+        x=0.5, y=0.5, xref='paper', yref='paper',
         text=f"<b>{_fmt_brl_curto(vab_rd)}</b><br>"
              f"<span style='font-size:10px;color:#7A7A7A'>"
              f"VAB total · {ano}</span>",
         showarrow=False,
-        xanchor='center',
-        yanchor='middle',
+        xanchor='center', yanchor='middle',
         font=dict(size=14, color=PALETTE['preto_titulo']),
     )
+    charts.aplicar_layout_default(fig_donut,
+        height=360,
+        showlegend=False,
+        margin=dict(l=30, r=30, t=20, b=20),
+    )
 
-    # --- Ranking de TODOS os municípios da RD por VAB total ---
+    # =========== Barras (gráfico 2, isolado) ===========
     df_vab = data.vab_setorial_absoluto()
     sub = df_vab[(df_vab['regiao_desenvolvimento'] == rd_nome)
                   & (df_vab['ano'] == ano)]
     rank = sub.groupby(['cod_ibge_6', 'municipio'], as_index=False)['vab'].sum()
-    rank = rank.sort_values('vab', ascending=True)  # plotly: primeiro item fica em baixo
-
-    # Ajusta altura do gráfico dinamicamente ao nº de municípios da RD
+    rank = rank.sort_values('vab', ascending=True)
     n_munis = len(rank)
-    altura_dinamica = max(360, 30 * n_munis + 60)
+    altura_barras = max(360, 30 * n_munis + 60)
 
-    # Margem esquerda dinâmica: reserva espaço suficiente pro nome mais longo.
-    # ~6.5px por caractere (fonte 10px) + 16px de padding.
-    # O eixo Y das barras começa em column_widths[0] = 35% do total.
-    # A margem já é descontada do espaço disponível automaticamente pelo Plotly.
-    nome_mais_longo = max((len(m) for m in rank['municipio']), default=10)
-    margem_esq = min(max(nome_mais_longo * 7, 80), 220)
-
-    fig.add_trace(go.Bar(
+    # Como o gráfico está em container isolado, o eixo Y tem total liberdade
+    # para reservar espaço aos nomes — sem invasão de outro subplot.
+    fig_barras = go.Figure(go.Bar(
         x=rank['vab'],
         y=rank['municipio'],
         orientation='h',
@@ -502,25 +485,40 @@ def _construir_vab_setorial(rd_nome: str, ano: int):
         cliponaxis=False,
         hovertemplate='<b>%{y}</b><br>VAB: %{x:,.0f}<extra></extra>',
         showlegend=False,
-    ), row=1, col=2)
-
-    fig.update_xaxes(visible=False, range=[0, rank['vab'].max() * 1.30],
-                     row=1, col=2)
-    fig.update_yaxes(
+    ))
+    fig_barras.update_xaxes(visible=False, range=[0, rank['vab'].max() * 1.30])
+    fig_barras.update_yaxes(
         showgrid=False,
-        tickfont=dict(size=10, color=PALETTE['grafite']),
+        tickfont=dict(size=11, color=PALETTE['grafite']),
         ticks='', showline=False,
-        row=1, col=2,
+        automargin=True,  # Plotly aloca espaço suficiente automaticamente
+    )
+    charts.aplicar_layout_default(fig_barras,
+        height=altura_barras,
+        showlegend=False,
+        margin=dict(l=10, r=40, t=20, b=20),
     )
 
-    charts.aplicar_layout_default(fig,
-        height=altura_dinamica,
-        showlegend=False,
-        margin=dict(l=10, r=30, t=20, b=10),
+    # =========== Container flex com 2 gráficos lado a lado ===========
+    return html.Div(
+        className="vab-setorial-grid",
+        children=[
+            html.Div(
+                className="vab-donut-wrap",
+                children=dcc.Graph(
+                    figure=fig_donut,
+                    config={'displayModeBar': False},
+                ),
+            ),
+            html.Div(
+                className="vab-barras-wrap",
+                children=dcc.Graph(
+                    figure=fig_barras,
+                    config={'displayModeBar': False},
+                ),
+            ),
+        ],
     )
-    # Sobrescrever margem com valor dinâmico baseado no nome mais longo
-    fig.update_layout(margin_l=margem_esq)
-    return dcc.Graph(figure=fig, config={'displayModeBar': False})
 
 
 # ============================================================================

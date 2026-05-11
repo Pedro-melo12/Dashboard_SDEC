@@ -33,15 +33,7 @@ def layout():
             # Conteúdo central
             html.Div(className="home-centro", children=[
 
-                # Logo da Secretaria
-                html.Div(className="home-brasao", children=[
-                    html.Img(
-                        src="/assets/logo_sdec.jpeg",
-                        alt="Secretaria de Desenvolvimento Econômico de Pernambuco",
-                    ),
-                ]),
-
-                # Textos principais (sem o subtítulo "SECRETARIA...")
+                # Textos principais
                 html.Div(className="home-textos", children=[
                     html.H1("Observatório Econômico",
                             className="home-titulo"),
@@ -55,12 +47,13 @@ def layout():
                     ),
                 ]),
 
-                # Botão para entrar — dcc.Link integra com dcc.Location
-                # sem precisar de callback, garantindo navegação SPA
+                # Botão para entrar — html.Button no layout estático
+                # garante que o callback funcione sem instabilidade
                 html.Div(className="home-acoes", children=[
-                    dcc.Link(
-                        children="Acessar o Observatório →",
-                        href="/entrar",
+                    html.Button(
+                        "Acessar o Observatório →",
+                        id="btn-entrar",
+                        n_clicks=0,
                         className="home-btn-entrar",
                     ),
                 ]),

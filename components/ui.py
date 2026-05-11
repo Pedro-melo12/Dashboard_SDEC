@@ -1,4 +1,13 @@
+"""
+components/ui.py
+================
+Componentes de UI reutilizáveis em Dash. Cada função retorna um
+componente Dash pronto para ser usado em qualquer aba.
 
+Filosofia: estilo aplicado via classes CSS (assets/style.css), não
+inline. Isso mantém o código Python limpo e permite ajustes visuais
+globais editando um único arquivo CSS.
+"""
 
 from dash import html
 from config import PALETTE, SEMANTIC

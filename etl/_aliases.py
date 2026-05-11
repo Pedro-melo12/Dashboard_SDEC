@@ -1,3 +1,14 @@
+"""
+etl/_aliases.py
+===============
+Dicionário central de aliases para padronizar nomes de municípios entre
+diferentes bases. A fonte canônica é o CAGED (porque tem o cod_ibge_6,
+que é o identificador estável).
+
+Lados esquerdos = forma alternativa que aparece nas planilhas externas
+                  (após normalização: lowercase + sem acentos).
+Lados direitos  = forma canônica usada pelo CAGED.
+"""
 
 import unicodedata
 import pandas as pd
