@@ -983,16 +983,30 @@ def pib_serie_municipio(cod_ibge_6: int) -> pd.DataFrame:
 # ============================================================================
 
 def pib_crescimento_estadual_real() -> pd.DataFrame:
-        cresc_nominal_pct, cresc_real_pct
+    """
+    Retorna o crescimento anual do PIB estadual nominal e real.
+
+    Colunas retornadas:
+    - ano
+    - pib_nominal
+    - pib_real_2023
+    - cresc_nominal_pct
+    - cresc_real_pct
     """
     df = pib_municipal()
-    estado = (df.groupby('ano', as_index=False)
-              .agg(pib_nominal=('pib', 'sum'),
-                   pib_real_2023=('pib_real_2023', 'sum')))
+
+    estado = (
+        df.groupby('ano', as_index=False)
+          .agg(
+              pib_nominal=('pib', 'sum'),
+              pib_real_2023=('pib_real_2023', 'sum')
+          )
+    )
+
     estado['cresc_nominal_pct'] = estado['pib_nominal'].pct_change() * 100
     estado['cresc_real_pct'] = estado['pib_real_2023'].pct_change() * 100
-    return estado.sort_values('ano').reset_index(drop=True)
 
+    return estado.sort_values('ano').reset_index(drop=True)
 
 # ============================================================================
 # VAB Setorial ABSOLUTO (Tabela 1 do VBA_PE)
