@@ -1,0 +1,202 @@
+{
+  "gerado_em": "2026-05-11T07:21:37",
+  "datasets": [
+    {
+      "arquivo": "caged_municipal.parquet",
+      "descricao": "CAGED por município",
+      "fonte": "Novo CAGED · MTE/SE",
+      "periodicidade": "mensal",
+      "n_registros": 12395,
+      "colunas": [
+        "data",
+        "ano",
+        "mes",
+        "uf",
+        "cod_ibge_6",
+        "municipio",
+        "admissoes",
+        "desligamentos",
+        "saldo",
+        "var_relativa"
+      ],
+      "tamanho_kb": 116.1,
+      "periodo_inicio": "2020-01-01",
+      "periodo_fim": "2025-07-01"
+    },
+    {
+      "arquivo": "caged_genero.parquet",
+      "descricao": "CAGED por gênero (estadual)",
+      "fonte": "Novo CAGED · MTE/SE",
+      "periodicidade": "mensal",
+      "n_registros": 134,
+      "colunas": [
+        "data",
+        "ano",
+        "mes",
+        "uf",
+        "sexo",
+        "admissoes",
+        "desligamentos",
+        "saldo"
+      ],
+      "tamanho_kb": 7.7,
+      "periodo_inicio": "2020-01-01",
+      "periodo_fim": "2025-07-01"
+    },
+    {
+      "arquivo": "caged_setor.parquet",
+      "descricao": "CAGED por grande setor (estadual)",
+      "fonte": "Novo CAGED · MTE/SE",
+      "periodicidade": "mensal",
+      "n_registros": 340,
+      "colunas": [
+        "data",
+        "ano",
+        "mes",
+        "uf",
+        "setor",
+        "admissoes",
+        "desligamentos",
+        "saldo",
+        "estoque"
+      ],
+      "tamanho_kb": 13.5,
+      "periodo_inicio": "2020-01-01",
+      "periodo_fim": "2025-07-01"
+    },
+    {
+      "arquivo": "pnad_pe.parquet",
+      "descricao": "PNAD Contínua - Pernambuco",
+      "fonte": "PNAD Contínua · IBGE",
+      "periodicidade": "trimestral",
+      "n_registros": 357,
+      "colunas": [
+        "data",
+        "trimestre",
+        "ano",
+        "uf",
+        "indicador",
+        "indicador_nome",
+        "valor",
+        "unidade"
+      ],
+      "tamanho_kb": 7.8,
+      "periodo_inicio": "2012-03-01",
+      "periodo_fim": "2025-06-01"
+    },
+    {
+      "arquivo": "pnad_regional.parquet",
+      "descricao": "PNAD Contínua - 9 estados do NE",
+      "fonte": "PNAD Contínua · IBGE",
+      "periodicidade": "trimestral",
+      "n_registros": 3850,
+      "colunas": [
+        "data",
+        "trimestre_label",
+        "ano",
+        "trimestre",
+        "regiao",
+        "indicador",
+        "indicador_nome",
+        "valor",
+        "unidade"
+      ],
+      "tamanho_kb": 32.0,
+      "periodo_inicio": "2012-03-01",
+      "periodo_fim": "2025-09-01"
+    },
+    {
+      "arquivo": "pobreza_regional.parquet",
+      "descricao": "Pobreza e extrema pobreza - regional",
+      "fonte": "PNAD Contínua · IBGE",
+      "periodicidade": "trimestral",
+      "n_registros": 1296,
+      "colunas": [
+        "data",
+        "trimestre_label",
+        "ano",
+        "trimestre",
+        "regiao",
+        "indicador",
+        "indicador_nome",
+        "valor",
+        "unidade"
+      ],
+      "tamanho_kb": 18.6,
+      "periodo_inicio": "2012-03-01",
+      "periodo_fim": "2025-06-01"
+    },
+    {
+      "arquivo": "municipios_rd.parquet",
+      "descricao": "Municípios × Regiões de Desenvolvimento",
+      "fonte": "SDEC · Governo de Pernambuco",
+      "periodicidade": "estática",
+      "n_registros": 185,
+      "colunas": [
+        "cod_ibge_6",
+        "municipio",
+        "regiao_desenvolvimento"
+      ],
+      "tamanho_kb": 5.7
+    },
+    {
+      "arquivo": "prefeitos.parquet",
+      "descricao": "Prefeitos eleitos por município",
+      "fonte": "TSE · Eleições municipais",
+      "periodicidade": "a cada 4 anos",
+      "n_registros": 184,
+      "colunas": [
+        "cod_ibge_6",
+        "municipio",
+        "prefeito_nome",
+        "prefeito_partido",
+        "prefeito_genero"
+      ],
+      "tamanho_kb": 9.2
+    },
+    {
+      "arquivo": "vereadores.parquet",
+      "descricao": "Vereadores eleitos por município",
+      "fonte": "TSE · Eleições municipais",
+      "periodicidade": "a cada 4 anos",
+      "n_registros": 2149,
+      "colunas": [
+        "cod_ibge_6",
+        "municipio",
+        "vereador_nome",
+        "partido",
+        "genero"
+      ],
+      "tamanho_kb": 39.4
+    },
+    {
+      "arquivo": "pib_municipal.parquet",
+      "descricao": "PIB municipal de Pernambuco (2010-2023)",
+      "fonte": "SEPLAG-PE / IBGE · Sistema de Contas Regionais",
+      "periodicidade": "anual",
+      "n_registros": 2590,
+      "colunas": [
+        "cod_ibge_6",
+        "municipio",
+        "ano",
+        "pib",
+        "vab_total",
+        "impostos",
+        "pib_per_capita",
+        "regiao_desenvolvimento",
+        "deflator_ipca",
+        "pib_real_2023",
+        "pib_per_capita_real_2023",
+        "dependencia_impostos_pct"
+      ],
+      "tamanho_kb": 153.3
+    },
+    {
+      "arquivo": "pe_municipios.geojson",
+      "descricao": "Malha territorial dos municípios de PE",
+      "fonte": "API de Malhas · IBGE",
+      "periodicidade": "estática",
+      "tamanho_kb": 222.6
+    }
+  ]
+}

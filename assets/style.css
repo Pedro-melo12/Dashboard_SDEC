@@ -1,0 +1,1243 @@
+/* ==========================================================================
+   Observatório Econômico de Pernambuco
+   --------------------------------------------------------------------------
+   Folha de estilo principal. Organizada em:
+   1. Variáveis (paleta + espaçamentos)
+   2. Reset e tipografia base
+   3. Layout do app (header, navegação, footer)
+   4. Componentes (KPIs, seções, gráficos)
+   5. Utilitários
+   ========================================================================== */
+
+/* 1. VARIÁVEIS ============================================================= */
+:root {
+    /* Paleta - sincronizada com config.py */
+    --grafite: #3A3A3A;
+    --cinza-medio: #7A7A7A;
+    --cinza-claro: #B8B8B8;
+    --cinza-neblina: #E5E3DE;
+    --bege-fundo: #F5F3EE;
+    --bege-fundo-claro: #FAFAF8;
+    --branco: #FFFFFF;
+    --preto-titulo: #2C2C2A;
+
+    --azul-ardosia: #5B7B9A;
+    --azul-empoeirado: #9DB4C7;
+    --verde-salvia: #8FA897;
+    --lilas-acinzentado: #A8A0B5;
+
+    --terracota: #C99383;
+    --rosa-empoeirado: #D4A5A5;
+    --mostarda-suave: #D4BC8B;
+    --bege-quente: #B9B098;
+
+    /* Tipografia */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 sans-serif;
+    --font-serif: 'Source Serif Pro', Georgia, serif;
+
+    /* Espaçamentos */
+    --pad-pagina: 28px;
+    --gap-secao: 16px;
+}
+
+/* 2. RESET E TIPOGRAFIA BASE =============================================== */
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--bege-fundo);
+    color: var(--grafite);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+p { margin: 0; }
+h1, h2, h3, h4 { margin: 0; font-weight: 500; }
+
+/* 3. LAYOUT DO APP ========================================================= */
+
+.app-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Header institucional ----- */
+
+.app-header {
+    background: var(--branco);
+    border-bottom: 1px solid var(--cinza-neblina);
+    padding: 14px var(--pad-pagina);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.header-esq {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.header-logo {
+    height: 40px;
+    width: auto;
+    display: block;
+}
+
+.header-centro {
+    flex: 1;
+    border-left: 1px solid var(--cinza-neblina);
+    padding-left: 18px;
+}
+
+.header-sobretitulo {
+    font-size: 9px;
+    color: var(--cinza-medio);
+    letter-spacing: 0.16em;
+    margin: 0;
+}
+
+.header-titulo {
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--preto-titulo);
+    letter-spacing: -0.025em;
+    margin: 1px 0 0 !important;
+}
+
+.header-dir {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--bege-fundo);
+    border-radius: 12px;
+    font-size: 10px;
+    color: var(--grafite);
+}
+
+.status-dot {
+    width: 5px;
+    height: 5px;
+    background: var(--verde-salvia);
+    border-radius: 50%;
+}
+
+.header-marca-pe {
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    border-left: 1px solid var(--cinza-neblina);
+}
+
+.bandeira-pe {
+    height: 36px;
+    width: auto;
+    border-radius: 2px;
+    box-shadow: 0 0 0 0.5px rgba(0,0,0,0.08);
+    display: block;
+}
+
+/* --- Navegação principal (eixos) ----- */
+
+.nav-eixos {
+    background: var(--branco);
+    padding: 0 var(--pad-pagina);
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--cinza-neblina);
+    align-items: center;
+}
+
+.nav-eixos-label {
+    font-size: 11px;
+    color: var(--cinza-medio);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 12px 16px 12px 0;
+}
+
+.nav-eixo {
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--cinza-medio);
+    cursor: pointer;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    letter-spacing: -0.01em;
+    transition: color 120ms ease;
+}
+
+.nav-eixo:hover { color: var(--preto-titulo); }
+
+.nav-eixo.ativo {
+    color: var(--preto-titulo);
+    font-weight: 500;
+    border-bottom-color: var(--azul-ardosia);
+}
+
+.nav-eixo.desativado {
+    color: var(--cinza-claro);
+    cursor: not-allowed;
+}
+
+/* --- Sub-navegação (chips) ----- */
+
+.nav-subs {
+    background: var(--bege-fundo-claro);
+    padding: 0 var(--pad-pagina);
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-bottom: 0.5px solid var(--cinza-neblina);
+}
+
+.nav-sub {
+    padding: 8px 14px;
+    color: var(--cinza-medio);
+    font-size: 11.5px;
+    cursor: pointer;
+    text-decoration: none;
+    border-bottom: 1.5px solid transparent;
+    transition: color 120ms ease;
+}
+
+.nav-sub:hover { color: var(--preto-titulo); }
+
+.nav-sub.ativo {
+    color: var(--preto-titulo);
+    font-weight: 500;
+    border-bottom-color: var(--azul-ardosia);
+}
+
+.nav-sub-fonte {
+    color: var(--cinza-medio);
+    font-weight: 400;
+    margin-left: 4px;
+    font-size: 11px;
+}
+
+/* --- Conteúdo da aba ----- */
+
+.aba-conteudo {
+    flex: 1;
+    padding: 18px var(--pad-pagina);
+    background: var(--bege-fundo);
+}
+
+.aba-titulo-bloco {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.aba-titulo {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--preto-titulo);
+    letter-spacing: -0.018em;
+    font-family: var(--font-serif);
+}
+
+.aba-subtitulo {
+    font-size: 12px;
+    color: var(--cinza-medio);
+    margin-top: 2px !important;
+}
+
+.aba-dica {
+    font-size: 11px;
+    color: var(--cinza-medio);
+    font-style: italic;
+}
+
+.aba-acoes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 4. COMPONENTES =========================================================== */
+
+/* --- Faixa de KPIs ----- */
+
+.kpi-faixa {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    background: var(--branco);
+    border: 0.5px solid var(--cinza-neblina);
+    border-radius: 4px;
+    margin-bottom: var(--gap-secao);
+    overflow: hidden;
+    position: relative;
+}
+
+.kpi-faixa-cinco {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.kpi-faixa-quatro {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.kpi-contexto-tag {
+    position: absolute;
+    top: -1px;
+    right: 0;
+    background: var(--bege-fundo);
+    color: var(--cinza-medio);
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-bottom-left-radius: 3px;
+    border-left: 0.5px solid var(--cinza-neblina);
+    border-bottom: 0.5px solid var(--cinza-neblina);
+    z-index: 2;
+}
+
+.kpi-simples {
+    padding: 14px 18px;
+    border-right: 0.5px solid var(--cinza-neblina);
+}
+.kpi-simples:last-child { border-right: none; }
+
+.kpi-label {
+    font-size: 9.5px;
+    color: var(--cinza-medio);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.kpi-valor {
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--preto-titulo);
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    margin: 4px 0 0 !important;
+    line-height: 1.1;
+}
+
+.kpi-valor-secundario {
+    font-size: 13px;
+    color: var(--cinza-medio);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-sub {
+    font-size: 10px;
+    color: var(--cinza-medio);
+    margin: 2px 0 0 !important;
+}
+
+/* --- Donut chart duplo (gênero) ----- */
+
+.duplo-donut-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin-bottom: 8px;
+}
+
+.donut-cabecalho {
+    padding: 0 14px;
+    border-right: 0.5px solid var(--cinza-neblina);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.donut-cabecalho:last-child {
+    border-right: none;
+}
+
+.donut-titulo-mini {
+    font-size: 10px;
+    color: var(--cinza-medio);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.donut-info-ano {
+    font-size: 14px;
+    font-family: var(--font-serif);
+    color: var(--preto-titulo);
+    padding: 5px 0;
+    margin: 0 !important;
+    /* Mesma altura do dropdown ao lado, pra alinhar visualmente */
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+}
+
+.filtro-donut {
+    /* Dropdown pequeno usado nos donuts (single-select) */
+    max-width: 180px;
+}
+
+.duplo-donut {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+
+.duplo-donut > * {
+    border-right: 0.5px solid var(--cinza-neblina);
+}
+.duplo-donut > *:last-child {
+    border-right: none;
+}
+
+/* --- Filtros de período (ano + mês) ----- */
+
+.filtros-row {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 12px;
+    align-items: flex-end;
+}
+
+.filtro-item {
+    flex: 1;
+    min-width: 0;
+}
+
+.filtro-label {
+    display: block;
+    font-size: 10px;
+    color: var(--cinza-medio);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.filtro-dropdown .Select-control,
+.filtro-dropdown .Select-menu-outer {
+    border-color: var(--cinza-neblina) !important;
+    border-radius: 3px !important;
+    font-family: var(--font-sans) !important;
+    font-size: 11.5px !important;
+    min-height: 30px !important;
+}
+
+.filtro-dropdown .Select-value-label,
+.filtro-dropdown .Select-placeholder {
+    color: var(--grafite) !important;
+}
+
+.filtro-dropdown .Select-menu {
+    font-size: 11.5px !important;
+}
+
+/* --- Ranking duplo (top 5 + bottom 5) ----- */
+
+.ranking-duplo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.ranking-bloco {
+    min-width: 0;
+}
+
+.ranking-label {
+    font-size: 10px;
+    color: var(--cinza-medio);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 4px 0 6px !important;
+    padding-bottom: 4px;
+    border-bottom: 0.5px solid var(--cinza-neblina);
+}
+
+/* --- Tabela comparativa de estados (html.Table manual) ----- */
+/*
+ * Usamos html.Table direto em vez de dash_table porque o último renderiza
+ * cabeçalho e corpo em <table>s separadas, causando desalinhamento de
+ * colunas em browsers diferentes. Com uma única <table>, header e body
+ * compartilham o mesmo cálculo de larguras: alinhamento garantido.
+ */
+.tabela-estados {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: var(--font-sans);
+}
+
+/* Larguras das colunas (somam 100%) */
+.tabela-estados th:nth-child(1),
+.tabela-estados td:nth-child(1) { width: 22%; }
+.tabela-estados th:nth-child(2),
+.tabela-estados td:nth-child(2) { width: 14%; }
+.tabela-estados th:nth-child(3),
+.tabela-estados td:nth-child(3),
+.tabela-estados th:nth-child(4),
+.tabela-estados td:nth-child(4),
+.tabela-estados th:nth-child(5),
+.tabela-estados td:nth-child(5),
+.tabela-estados th:nth-child(6),
+.tabela-estados td:nth-child(6) { width: 16%; }
+
+/* Cabeçalho */
+.tabela-estados thead th {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cinza-medio);
+    background: var(--bege-fundo-claro);
+    border-bottom: 1px solid var(--cinza-claro);
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: color 100ms ease, background 100ms ease;
+}
+
+.tabela-estados thead th:hover {
+    color: var(--preto-titulo);
+    background: var(--cinza-neblina);
+}
+
+.tabela-estados thead th.th-active {
+    color: var(--azul-ardosia);
+}
+
+/* Alinhamento - texto à esquerda, números à direita */
+.tabela-estados .th-texto,
+.tabela-estados .td-texto {
+    text-align: left;
+}
+.tabela-estados .th-numero,
+.tabela-estados .td-numero {
+    text-align: right;
+}
+
+/* Células */
+.tabela-estados tbody td {
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--grafite);
+    border-bottom: 0.5px solid var(--cinza-neblina);
+    /* Truncar com elipsis se conteúdo passar */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tabela-estados tbody td.td-texto {
+    font-weight: 500;
+}
+
+/* Pernambuco em destaque */
+.tabela-estados tbody tr.tr-pe {
+    background: #F0F4F8;
+}
+.tabela-estados tbody tr.tr-pe td {
+    color: var(--preto-titulo);
+    font-weight: 500;
+}
+
+.tabela-estados tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- Bloco de seção (cards de conteúdo) ----- */
+
+.secao {
+    background: var(--branco);
+    border: 0.5px solid var(--cinza-neblina);
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin-bottom: var(--gap-secao);
+}
+
+.secao-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.secao-etiqueta {
+    font-size: 10px;
+    color: var(--cinza-medio);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.secao-titulo {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--preto-titulo);
+    letter-spacing: -0.018em;
+    font-family: var(--font-serif);
+    margin-top: 2px !important;
+}
+
+.secao-descricao {
+    font-size: 11px;
+    color: var(--cinza-medio);
+    margin-top: 2px !important;
+}
+
+.secao-divisor {
+    border-top: 0.5px solid var(--cinza-neblina);
+    margin: 0 -18px 10px;
+}
+
+.secao-corpo { /* container do conteúdo principal */ }
+
+/* Grid duplo (2 colunas) */
+.grid-duplo {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 12px;
+}
+.grid-1-1 { grid-template-columns: 1fr 1fr; }
+
+/* Grid triplo (3 colunas iguais) */
+.grid-triplo {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: var(--gap-secao);
+}
+
+/* --- Aviso de dados ----- */
+
+.aviso-dados {
+    background: #FAEEDA;
+    border-left: 2px solid var(--mostarda-suave);
+    color: #6B5520;
+    font-size: 11.5px;
+    padding: 8px 14px;
+    margin-bottom: var(--gap-secao);
+    border-radius: 3px;
+}
+
+.aviso-icon {
+    font-weight: 500;
+    color: #8B6F2A;
+}
+
+/* --- Botões ----- */
+
+.btn-link {
+    background: transparent;
+    border: 0.5px solid var(--cinza-neblina);
+    color: var(--azul-ardosia);
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: background 120ms ease;
+}
+
+.btn-link:hover {
+    background: var(--bege-fundo);
+}
+
+/* --- Footer ----- */
+
+.app-footer {
+    border-top: 0.5px solid var(--cinza-neblina);
+    padding: 10px 0;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--cinza-medio);
+}
+
+.footer-strong {
+    color: var(--grafite);
+    font-weight: 500;
+}
+
+.footer-sep {
+    margin: 0 6px;
+    color: var(--cinza-claro);
+}
+
+.footer-acoes {
+    display: flex;
+    gap: 14px;
+}
+
+.footer-acao {
+    cursor: pointer;
+}
+.footer-acao:hover { color: var(--azul-ardosia); }
+
+/* 5. UTILITÁRIOS =========================================================== */
+
+.hidden { display: none !important; }
+
+/* Plotly: remove a borda padrão dos gráficos */
+.js-plotly-plot .plotly { border: none !important; }
+
+
+/* === Aviso de aba em construção ============================================ */
+
+.aviso-construcao {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 18px 22px;
+    margin-bottom: var(--gap-secao);
+    background: #FBF8F2;
+    border: 1px solid var(--cinza-neblina);
+    border-left: 3px solid var(--mostarda-suave);
+    border-radius: 4px;
+}
+
+.aviso-construcao-icon {
+    font-size: 22px;
+    line-height: 1;
+    padding-top: 2px;
+}
+
+.aviso-construcao-corpo {
+    flex: 1;
+}
+
+.aviso-construcao-titulo {
+    font-family: var(--font-serif);
+    font-size: 14px;
+    color: var(--preto-titulo);
+    margin: 0 0 4px 0 !important;
+}
+
+.aviso-construcao-descricao {
+    font-size: 12px;
+    color: var(--cinza-medio);
+    line-height: 1.55;
+    margin: 0 !important;
+}
+
+
+/* === Aviso pequeno no rodapé de aba ======================================== */
+
+.aviso-rodape {
+    padding: 12px 16px;
+    margin-top: 12px;
+    background: var(--bege-fundo);
+    border-radius: 3px;
+    font-size: 11.5px;
+    color: var(--cinza-medio);
+    line-height: 1.55;
+}
+.aviso-rodape p {
+    margin: 0;
+}
+
+
+/* === Legenda das RDs (12 itens em grid) ==================================== */
+
+.legenda-rds {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px 18px;
+    padding: 16px 12px 8px;
+    margin-top: 8px;
+    border-top: 0.5px solid var(--cinza-neblina);
+}
+
+.legenda-rd-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+}
+
+.legenda-rd-cor {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.legenda-rd-nome {
+    color: var(--grafite);
+    flex: 1;
+}
+
+.legenda-rd-count {
+    color: var(--cinza-medio);
+    font-size: 10px;
+}
+
+
+/* === Tabela de Gestão Pública (mesmo padrão da tabela-estados) ============= */
+
+.tabela-gestao {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: var(--font-sans);
+}
+
+.tabela-gestao th:nth-child(1),
+.tabela-gestao td:nth-child(1) { width: 22%; }
+.tabela-gestao th:nth-child(2),
+.tabela-gestao td:nth-child(2) { width: 18%; }
+.tabela-gestao th:nth-child(3),
+.tabela-gestao td:nth-child(3) { width: 30%; }
+.tabela-gestao th:nth-child(4),
+.tabela-gestao td:nth-child(4) { width: 16%; }
+.tabela-gestao th:nth-child(5),
+.tabela-gestao td:nth-child(5) { width: 14%; }
+
+.tabela-gestao thead th {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cinza-medio);
+    background: var(--bege-fundo-claro);
+    border-bottom: 1px solid var(--cinza-claro);
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: color 100ms ease, background 100ms ease;
+}
+.tabela-gestao thead th:hover {
+    color: var(--preto-titulo);
+    background: var(--cinza-neblina);
+}
+.tabela-gestao thead th.th-active {
+    color: var(--azul-ardosia);
+}
+
+.tabela-gestao .th-texto,
+.tabela-gestao .td-texto {
+    text-align: left;
+}
+.tabela-gestao .th-texto-centro,
+.tabela-gestao .td-texto-centro {
+    text-align: center;
+}
+.tabela-gestao .th-numero,
+.tabela-gestao .td-numero {
+    text-align: right;
+}
+
+.tabela-gestao tbody td {
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--grafite);
+    border-bottom: 0.5px solid var(--cinza-neblina);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tabela-gestao tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- Tabela Gestão Pública (5 colunas) ----- */
+.tabela-gestao {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: var(--font-sans);
+}
+
+.tabela-gestao th:nth-child(1),
+.tabela-gestao td:nth-child(1) { width: 22%; }
+.tabela-gestao th:nth-child(2),
+.tabela-gestao td:nth-child(2) { width: 18%; }
+.tabela-gestao th:nth-child(3),
+.tabela-gestao td:nth-child(3) { width: 30%; }
+.tabela-gestao th:nth-child(4),
+.tabela-gestao td:nth-child(4) { width: 14%; }
+.tabela-gestao th:nth-child(5),
+.tabela-gestao td:nth-child(5) { width: 16%; }
+
+.tabela-gestao thead th {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cinza-medio);
+    background: var(--bege-fundo-claro);
+    border-bottom: 1px solid var(--cinza-claro);
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: color 100ms ease, background 100ms ease;
+}
+.tabela-gestao thead th:hover {
+    color: var(--preto-titulo);
+    background: var(--cinza-neblina);
+}
+.tabela-gestao thead th.th-active {
+    color: var(--azul-ardosia);
+}
+.tabela-gestao .th-texto,
+.tabela-gestao .td-texto { text-align: left; }
+.tabela-gestao .th-numero,
+.tabela-gestao .td-numero { text-align: right; }
+
+.tabela-gestao tbody td {
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--grafite);
+    border-bottom: 0.5px solid var(--cinza-neblina);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tabela-gestao tbody td.td-texto {
+    font-weight: normal;
+}
+.tabela-gestao tbody td:nth-child(1) {
+    font-weight: 500;
+    color: var(--preto-titulo);
+}
+.tabela-gestao tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- Aviso de aba pendente / aguardando dados ----- */
+.aviso-pendente {
+    padding: 24px 28px;
+    color: var(--grafite);
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.aviso-pendente p {
+    margin: 0 0 12px 0;
+}
+
+.aviso-pendente p:last-child {
+    margin-bottom: 0;
+}
+
+.aviso-pendente ul {
+    margin: 0 0 12px 24px;
+    padding: 0;
+}
+
+.aviso-pendente li {
+    margin: 4px 0;
+    color: var(--grafite);
+}
+
+.aviso-pendente strong {
+    color: var(--preto-titulo);
+    font-weight: 500;
+}
+
+/* --- Tabela PIB (6 colunas) ----- */
+.tabela-pib {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: var(--font-sans);
+}
+
+.tabela-pib th:nth-child(1),
+.tabela-pib td:nth-child(1) { width: 22%; }
+.tabela-pib th:nth-child(2),
+.tabela-pib td:nth-child(2) { width: 18%; }
+.tabela-pib th:nth-child(3),
+.tabela-pib td:nth-child(3) { width: 14%; }
+.tabela-pib th:nth-child(4),
+.tabela-pib td:nth-child(4) { width: 16%; }
+.tabela-pib th:nth-child(5),
+.tabela-pib td:nth-child(5) { width: 13%; }
+.tabela-pib th:nth-child(6),
+.tabela-pib td:nth-child(6) { width: 17%; }
+
+.tabela-pib thead th {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cinza-medio);
+    background: var(--bege-fundo-claro);
+    border-bottom: 1px solid var(--cinza-claro);
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: color 100ms ease, background 100ms ease;
+}
+.tabela-pib thead th:hover {
+    color: var(--preto-titulo);
+    background: var(--cinza-neblina);
+}
+.tabela-pib thead th.th-active {
+    color: var(--azul-ardosia);
+}
+.tabela-pib .th-texto,
+.tabela-pib .td-texto { text-align: left; }
+.tabela-pib .th-numero,
+.tabela-pib .td-numero { text-align: right; }
+
+.tabela-pib tbody td {
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--grafite);
+    border-bottom: 0.5px solid var(--cinza-neblina);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tabela-pib tbody td:nth-child(1) {
+    font-weight: 500;
+    color: var(--preto-titulo);
+}
+.tabela-pib tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* ============================================================================
+   HOME — Capa do Observatório
+   ============================================================================ */
+
+.home-capa {
+    min-height: calc(100vh - 90px); /* descontando header */
+    background: linear-gradient(160deg,
+        var(--azul-ardosia) 0%,
+        #2C3E50 45%,
+        #1A252F 100%);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Grade de pontos decorativos */
+.home-capa::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+}
+
+/* Faixa top com gradiente sutil */
+.home-faixa-top {
+    height: 3px;
+    background: linear-gradient(90deg,
+        transparent 0%, var(--azul-ardosia) 30%,
+        #D4BC8B 60%, var(--terracota) 100%);
+}
+
+/* Centro da capa */
+.home-centro {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 40px 20px;
+    gap: 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* Brasão / logo */
+.home-brasao {
+    width: 300px;
+    height: 90px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+    padding: 10px 20px;
+    backdrop-filter: blur(4px);
+    overflow: hidden;
+}
+
+.home-brasao-sigla {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.90);
+    font-family: var(--font-sans);
+}
+
+.home-brasao img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Textos */
+.home-textos {
+    text-align: center;
+    max-width: 960px;
+    margin-bottom: 52px;
+}
+
+.home-orgao {
+    display: none; /* removido conforme solicitação */
+}
+
+.home-titulo {
+    font-family: var(--font-sans);
+    font-size: clamp(56px, 8.5vw, 96px);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    color: #FFFFFF;
+    margin: 0;
+    line-height: 1.0;
+}
+
+.home-subtitulo {
+    font-family: var(--font-sans);
+    font-size: clamp(56px, 8.5vw, 96px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #D4BC8B;
+    margin: 0 0 36px;
+    line-height: 1.0;
+}
+
+.home-descricao {
+    font-family: var(--font-sans);
+    font-size: 18px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.55);
+    margin: 0;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Botão entrar */
+.home-acoes {
+    margin-bottom: 52px;
+}
+
+.home-btn-entrar {
+    display: inline-block;
+    padding: 16px 52px;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #FFFFFF;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 150ms ease, border-color 150ms ease;
+    backdrop-filter: blur(4px);
+}
+
+.home-btn-entrar:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.50);
+    color: #FFFFFF;
+    text-decoration: none;
+}
+
+/* Chips dos eixos */
+.home-eixos-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 860px;
+}
+
+.home-chip {
+    padding: 8px 20px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.50);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+}
+
+/* Rodapé da capa */
+.home-rodape {
+    padding: 20px 40px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
+    z-index: 1;
+}
+
+.home-rodape-texto {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.25);
+    text-transform: uppercase;
+}
+
+.home-rodape-ano {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.18);
+}
+
+/* Faixas coloridas de Pernambuco (embaixo) */
+.home-faixas-pe {
+    display: flex;
+    height: 4px;
+    width: 100%;
+}
+
+.home-faixa-verde  { flex: 1; background: #2D7D46; }
+.home-faixa-amarela { flex: 1; background: #D4BC8B; }
+.home-faixa-vermelha { flex: 1; background: var(--terracota); }
+
+/* --- Home no nav: separado visualmente dos eixos ----- */
+.nav-home {
+    margin-right: 16px;
+    padding-right: 18px;
+    border-right: 1px solid var(--cinza-neblina);
+    color: var(--cinza-medio);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+}
+
+.nav-home.ativo {
+    color: var(--azul-ardosia);
+    font-weight: 500;
+    border-bottom-color: var(--azul-ardosia);
+}
+
+/* dcc.Link renderiza como <a>, estilos já estão no .home-btn-entrar acima */
